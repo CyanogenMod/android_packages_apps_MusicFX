@@ -61,7 +61,7 @@ public class ControlPanelEffect {
     static enum Key {
         global_enabled, virt_enabled, virt_strength_supported, virt_strength, virt_type, bb_enabled,
         bb_strength, te_enabled, te_strength, avl_enabled, lm_enabled, lm_strength, eq_enabled,
-        eq_num_bands, eq_level_range, eq_center_freq, eq_band_level, eq_num_presets, eq_preset_name,
+        eq_num_bands, eq_level_range, eq_center_freq, eq_band_level, eq_band_level_no_save, eq_num_presets, eq_preset_name,
         eq_preset_user_band_level, eq_preset_user_band_level_default,
         eq_preset_opensl_es_band_level, eq_preset_ci_extreme_band_level, eq_current_preset,
         pr_enabled, pr_current_preset
@@ -397,7 +397,7 @@ public class ControlPanelEffect {
                             for (short band = 0; band < len; band++) {
                                 final int level = bandLevels[band];
                                 setParameterInt(context, packageName,
-                                        audioSession, Key.eq_band_level, level, band);
+                                        audioSession, Key.eq_band_level_no_save, level, band);
                             }
                         }
                         // XXX: Preset Reverb not used for the moment, so commented out the effect
@@ -602,6 +602,19 @@ public class ControlPanelEffect {
                     }
                     break;
                 }
+                // Same as eq_band_level except won't save band level in User preset
+                case eq_band_level_no_save: {
+                    if (arg1 == DUMMY_ARGUMENT) {
+                        throw new IllegalArgumentException("Dummy arg passed.");
+                    }
+                    final short band = (short) arg1;
+                    strKey = Key.eq_band_level.toString() + band;
+                    final Equalizer equalizerEffect = getEqualizerEffect(audioSession);
+                    if (equalizerEffect != null) {
+                        equalizerEffect.setBandLevel(band, (short) value);
+                    }
+                    break;
+                }
                 case eq_current_preset: {
                     final Equalizer equalizerEffect = getEqualizerEffect(audioSession);
                     if (equalizerEffect != null) {
@@ -697,6 +710,16 @@ public class ControlPanelEffect {
                     editor.putInt(Key.eq_preset_user_band_level.toString() + band, value);
                     break;
                 }
+                // Same as eq_band_level except won't save band level in User preset
+                case eq_band_level_no_save: {
+                    if (arg1 == DUMMY_ARGUMENT) {
+                        throw new IllegalArgumentException("Dummy arg passed.");
+                    }
+                    final short band = (short) arg1;
+                    strKey = Key.eq_band_level.toString() + band;
+                    break;
+                }
+
                 case eq_current_preset: {
                     final short preset = (short) value;
                     final int numBands = prefs.getInt(Key.eq_num_bands.toString(),
